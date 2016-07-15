@@ -5,30 +5,29 @@ import (
 	"fmt"
 	"strconv"
 
-	. "github.com/bradylove/v3-cli-plugin/models"
+	"github.com/bradylove/v3-cli-plugin/models"
 	"github.com/bradylove/v3-cli-plugin/util"
-	"github.com/cloudfoundry/cli/plugin"
 )
 
-func Apps(cliConnection plugin.CliConnection, args []string) {
-	mySpace, err := cliConnection.GetCurrentSpace()
-	util.FreakOut(err)
-	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("v3/apps?space_guids=%s", mySpace.Guid), "-X", "GET")
-	util.FreakOut(err)
-	apps := V3AppsModel{}
-	err = json.Unmarshal([]byte(output[0]), &apps)
-	util.FreakOut(err)
+func Apps(conn Connection, args []string) {
+	mySpace, err := conn.GetCurrentSpace()
+	util.ExitIfError(err)
 
-	if len(apps.Apps) > 0 {
-		appsTable := util.NewTable([]string{("name"), ("total_desired_instances")})
-		for _, v := range apps.Apps {
-			appsTable.Add(
-				v.Name,
-				strconv.Itoa(v.Instances),
-			)
-		}
-		appsTable.Print()
-	} else {
+	resp, err := conn.httpGet(fmt.Sprintf("v3/apps?space_guids=%s", mySpace.Guid))
+	util.ExitIfError(err)
+
+	var apps models.V3AppsModel
+	err = json.Unmarshal(resp, &apps)
+	util.ExitIfError(err)
+
+	if len(apps.Apps) == 0 {
 		fmt.Println("No v3 apps found.")
+		return
 	}
+
+	appsTable := util.NewTable([]string{"name", "total_desired_instances"})
+	for _, v := range apps.Apps {
+		appsTable.Add(v.Name, strconv.Itoa(v.Instances))
+	}
+	appsTable.Print()
 }

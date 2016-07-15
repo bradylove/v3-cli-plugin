@@ -19,8 +19,7 @@ const (
 	commandBindService = "v3-bind-service"
 )
 
-type V3Plugin struct {
-}
+type V3Plugin struct{}
 
 func main() {
 	plugin.Start(new(V3Plugin))
@@ -35,7 +34,7 @@ func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string)
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
 			return
 		}
-		commands.Apps(cliConnection, args)
+		commands.Apps(commands.Connection{cliConnection}, args)
 	case commandProcesses:
 		if len(args) != 1 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
@@ -92,6 +91,14 @@ func (v3plugin *V3Plugin) GetMetadata() plugin.PluginMetadata {
 		},
 		Commands: []plugin.Command{
 			{
+				Name:     commandApps,
+				HelpText: "displays all v3 apps",
+				UsageDetails: plugin.Usage{
+					Usage:   commandApps,
+					Options: map[string]string{},
+				},
+			},
+			{
 				Name:     commandPush,
 				HelpText: "pushes current dir as a v3 process",
 				UsageDetails: plugin.Usage{
@@ -104,10 +111,10 @@ func (v3plugin *V3Plugin) GetMetadata() plugin.PluginMetadata {
 				},
 			},
 			{
-				Name:     commandApps,
-				HelpText: "displays all v3 apps",
+				Name:     commandDelete,
+				HelpText: "delete a v3 app",
 				UsageDetails: plugin.Usage{
-					Usage:   commandApps,
+					Usage:   fmt.Sprintf("%s APPNAME", commandDelete),
 					Options: map[string]string{},
 				},
 			},
@@ -116,14 +123,6 @@ func (v3plugin *V3Plugin) GetMetadata() plugin.PluginMetadata {
 				HelpText: "displays all v3 processes",
 				UsageDetails: plugin.Usage{
 					Usage:   fmt.Sprintf("%s ", commandProcesses),
-					Options: map[string]string{},
-				},
-			},
-			{
-				Name:     commandDelete,
-				HelpText: "delete a v3 app",
-				UsageDetails: plugin.Usage{
-					Usage:   fmt.Sprintf("%s APPNAME", commandDelete),
 					Options: map[string]string{},
 				},
 			},
