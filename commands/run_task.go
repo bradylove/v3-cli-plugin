@@ -7,6 +7,7 @@ import (
 	"github.com/bradylove/v3-cli-plugin/models"
 	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/plugin"
+	"strings"
 )
 
 func RunTask(cliConnection plugin.CliConnection, args []string) {
@@ -18,7 +19,7 @@ func RunTask(cliConnection plugin.CliConnection, args []string) {
 
 	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
 	apps := models.V3AppsModel{}
-	json.Unmarshal([]byte(output[0]), &apps)
+	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 	if len(apps.Apps) == 0 {
 		fmt.Printf("App %s not found\n", appName)
@@ -39,7 +40,7 @@ func RunTask(cliConnection plugin.CliConnection, args []string) {
 	}
 
 	task := models.V3TaskModel{}
-	err = json.Unmarshal([]byte(output[0]), &task)
+	err = json.Unmarshal([]byte(strings.Join(output, "")), &task)
 	util.ExitIfError(err)
 	if task.Guid == "" {
 		fmt.Printf("Failed to run task %s:\n%s\n", taskName, output[0])

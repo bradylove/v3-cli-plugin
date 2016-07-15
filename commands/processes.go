@@ -6,23 +6,24 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/bradylove/v3-cli-plugin/models"
-	. "github.com/bradylove/v3-cli-plugin/util"
+	"github.com/bradylove/v3-cli-plugin/models"
+	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/plugin"
 )
 
 func Processes(cliConnection plugin.CliConnection, args []string) {
 	mySpace, err := cliConnection.GetCurrentSpace()
-	ExitIfError(err)
+	util.ExitIfError(err)
 
 	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "v3/processes?per_page=5000", "-X", "GET")
-	ExitIfError(err)
-	processes := V3ProcessesModel{}
-	err = json.Unmarshal([]byte(output[0]), &processes)
-	ExitIfError(err)
+	util.ExitIfError(err)
+
+	var processes models.V3ProcessesModel
+	err = json.Unmarshal([]byte(strings.Join(output, "")), &processes)
+	util.ExitIfError(err)
 
 	if len(processes.Processes) > 0 {
-		processesTable := NewTable([]string{("app"), ("type"), ("instances"), ("memory in MB"), ("disk in MB")})
+		processesTable := util.NewTable([]string{("app"), ("type"), ("instances"), ("memory in MB"), ("disk in MB")})
 		for _, v := range processes.Processes {
 			if strings.Contains(v.Links.Space.Href, mySpace.Guid) {
 				appName := "N/A"

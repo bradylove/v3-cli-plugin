@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	. "github.com/bradylove/v3-cli-plugin/models"
-	. "github.com/bradylove/v3-cli-plugin/util"
+	"strings"
+
+	"github.com/bradylove/v3-cli-plugin/models"
+	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/plugin"
 	"github.com/simonleung8/flags"
 )
@@ -23,8 +25,8 @@ func BindService(cliConnection plugin.CliConnection, args []string) {
 	serviceInstanceName := fc.Args()[2]
 
 	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
-	apps := V3AppsModel{}
-	json.Unmarshal([]byte(output[0]), &apps)
+	var apps models.V3AppsModel
+	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 	if len(apps.Apps) == 0 {
 		fmt.Printf("App %s not found\n", appName)
@@ -34,7 +36,7 @@ func BindService(cliConnection plugin.CliConnection, args []string) {
 	appGuid := apps.Apps[0].Guid
 
 	serviceInstance, err := cliConnection.GetService(serviceInstanceName)
-	ExitIfError(err)
+	util.ExitIfError(err)
 	serviceInstanceGuid := serviceInstance.Guid
 
 	body := fmt.Sprintf(`{

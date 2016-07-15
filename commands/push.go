@@ -52,7 +52,7 @@ func Push(conn Connection, args []string) {
 	util.ExitIfError(err)
 
 	var app models.V3AppModel
-	err = json.Unmarshal([]byte(output[0]), &app)
+	err = json.Unmarshal([]byte(strings.Join(output, "")), &app)
 	util.ExitIfError(err)
 	if app.Error_Code != "" {
 		util.ExitIfError(errors.New("Error creating v3 app: " + app.Error_Code))
@@ -68,7 +68,7 @@ func Push(conn Connection, args []string) {
 		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", request)
 		util.ExitIfError(err)
 
-		err = json.Unmarshal([]byte(output[0]), &pack)
+		err = json.Unmarshal([]byte(strings.Join(output, "")), &pack)
 		if err != nil {
 			util.ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
 		}
@@ -77,7 +77,7 @@ func Push(conn Connection, args []string) {
 		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", "{\"type\": \"bits\"}")
 		util.ExitIfError(err)
 
-		err = json.Unmarshal([]byte(output[0]), &pack)
+		err = json.Unmarshal([]byte(strings.Join(output, "")), &pack)
 		if err != nil {
 			util.ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
 		}
@@ -107,7 +107,7 @@ func Push(conn Connection, args []string) {
 	util.ExitIfError(err)
 
 	var droplet models.V3DropletModel
-	err = json.Unmarshal([]byte(output[0]), &droplet)
+	err = json.Unmarshal([]byte(strings.Join(output, "")), &droplet)
 	if err != nil {
 		util.ExitIfError(errors.New("error marshaling the v3 droplet: " + err.Error()))
 	}
@@ -126,7 +126,7 @@ func Push(conn Connection, args []string) {
 		output, err = conn.CliCommandWithoutTerminalOutput("curl", nextUrl)
 		util.ExitIfError(err)
 		var tmp models.DomainsModel
-		err = json.Unmarshal([]byte(output[0]), &tmp)
+		err = json.Unmarshal([]byte(strings.Join(output, "")), &tmp)
 		util.ExitIfError(err)
 		allDomains.Resources = append(allDomains.Resources, tmp.Resources...)
 
@@ -143,11 +143,11 @@ func Push(conn Connection, args []string) {
 	if strings.Contains(output[0], "CF-RouteHostTaken") {
 		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("v2/routes?q=host:%s;domain_guid:%s", fc.Args()[1], domainGuid))
 		var routes models.RoutesModel
-		err = json.Unmarshal([]byte(output[0]), &routes)
+		err = json.Unmarshal([]byte(strings.Join(output, "")), &routes)
 		routeGuid = routes.Routes[0].Metadata.Guid
 	} else {
 		var route models.RouteModel
-		err = json.Unmarshal([]byte(output[0]), &route)
+		err = json.Unmarshal([]byte(strings.Join(output, "")), &route)
 		if err != nil {
 			util.ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
 		}
@@ -157,7 +157,7 @@ func Push(conn Connection, args []string) {
 	util.ExitIfError(err)
 	var route models.RouteModel
 
-	err = json.Unmarshal([]byte(output[0]), &route)
+	err = json.Unmarshal([]byte(strings.Join(output, "")), &route)
 	if err != nil {
 		util.ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
 	}

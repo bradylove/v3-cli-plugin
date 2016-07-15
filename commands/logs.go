@@ -22,7 +22,7 @@ package commands
 // 	appName := args[1]
 // 	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
 // 	apps := V3AppsModel{}
-// 	json.Unmarshal([]byte(output[0]), &apps)
+// 	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 // 	if len(apps.Apps) == 0 {
 // 		fmt.Printf("App %s not found\n", appName)

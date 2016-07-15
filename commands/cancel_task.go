@@ -9,6 +9,7 @@ import (
 	"github.com/bradylove/v3-cli-plugin/models"
 	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/plugin"
+	"strings"
 )
 
 type runningTask struct {
@@ -26,7 +27,7 @@ func CancelTask(cliConnection plugin.CliConnection, args []string) {
 	util.ExitIfError(err)
 
 	apps := models.V3AppsModel{}
-	json.Unmarshal([]byte(output[0]), &apps)
+	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 	if len(apps.Apps) == 0 {
 		fmt.Printf("App %s not found\n", appName)
