@@ -26,6 +26,8 @@ func main() {
 }
 
 func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string) {
+	conn := commands.Connection{cliConnection}
+
 	switch args[0] {
 	case commandPush:
 		commands.Push(cliConnection, args)
@@ -34,7 +36,7 @@ func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string)
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
 			return
 		}
-		commands.Apps(commands.Connection{cliConnection}, args)
+		commands.Apps(conn, args)
 	case commandProcesses:
 		if len(args) != 1 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
@@ -59,7 +61,7 @@ func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string)
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
 			return
 		}
-		commands.Tasks(cliConnection, args)
+		commands.Tasks(commands.Connection{cliConnection}, args)
 	case commandRunTask:
 		if len(args) != 4 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
