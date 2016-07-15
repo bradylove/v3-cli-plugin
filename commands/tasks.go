@@ -4,43 +4,40 @@ import (
 	"encoding/json"
 	"fmt"
 
-	. "github.com/bradylove/v3-cli-plugin/models"
-	. "github.com/bradylove/v3-cli-plugin/util"
-	"github.com/cloudfoundry/cli/plugin"
+	"github.com/bradylove/v3-cli-plugin/models"
+	"github.com/bradylove/v3-cli-plugin/util"
 )
 
-func Tasks(cliConnection plugin.CliConnection, args []string) {
+func Tasks(conn Connection, args []string) {
 	appName := args[1]
 	fmt.Printf("Listing tasks for app %s...\n", appName)
 
-	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
-	apps := V3AppsModel{}
-	json.Unmarshal([]byte(output[0]), &apps)
+	output, err := conn.httpGet(fmt.Sprintf("/v3/apps?names=%s", appName))
+	util.ExitIfError(err)
+
+	var apps models.V3AppsModel
+	err = json.Unmarshal(output, &apps)
 
 	if len(apps.Apps) == 0 {
 		fmt.Printf("App %s not found\n", appName)
 		return
 	}
 
-	appGuid := apps.Apps[0].Guid
+	output, err = conn.httpGet(fmt.Sprintf("/v3/apps/%s/tasks", apps.Apps[0].Guid))
+	util.ExitIfError(err)
 
-	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/tasks", appGuid), "-X", "GET")
-	ExitIfError(err)
-	tasks := V3TasksModel{}
-	err = json.Unmarshal([]byte(output[0]), &tasks)
-	ExitIfError(err)
+	var tasks models.V3TasksModel
+	err = json.Unmarshal(output, &tasks)
+	util.ExitIfError(err)
 
-	if len(tasks.Tasks) > 0 {
-		tasksTable := NewTable([]string{("name"), ("command"), ("state")})
-		for _, v := range tasks.Tasks {
-			tasksTable.Add(
-				v.Name,
-				v.Command,
-				v.State,
-			)
-		}
-		tasksTable.Print()
-	} else {
+	if len(tasks.Tasks) == 0 {
 		fmt.Println("No v3 tasks found.")
+		return
 	}
+
+	tasksTable := util.NewTable([]string{("name"), ("command"), ("state")})
+	for _, v := range tasks.Tasks {
+		tasksTable.Add(v.Name, v.Command, v.State)
+	}
+	tasksTable.Print()
 }
