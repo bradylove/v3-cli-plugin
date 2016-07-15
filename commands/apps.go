@@ -16,7 +16,7 @@ func Apps(conn Connection, args []string) {
 	resp, err := conn.httpGet(fmt.Sprintf("v3/apps?space_guids=%s", mySpace.Guid))
 	util.ExitIfError(err)
 
-	var apps models.V3AppsModel
+	var apps models.V3Apps
 	err = json.Unmarshal(resp, &apps)
 	util.ExitIfError(err)
 

@@ -26,7 +26,7 @@ func CancelTask(cliConnection plugin.CliConnection, args []string) {
 	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
 	util.ExitIfError(err)
 
-	apps := models.V3AppsModel{}
+	apps := models.V3Apps{}
 	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 	if len(apps.Apps) == 0 {
@@ -39,7 +39,7 @@ func CancelTask(cliConnection plugin.CliConnection, args []string) {
 	tasksJson, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/tasks", appGuid))
 	util.ExitIfError(err)
 
-	tasks := models.V3TasksModel{}
+	tasks := models.V3Tasks{}
 	err = json.Unmarshal([]byte(tasksJson[0]), &tasks)
 	util.ExitIfError(err)
 

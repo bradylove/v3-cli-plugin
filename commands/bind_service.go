@@ -25,7 +25,7 @@ func BindService(cliConnection plugin.CliConnection, args []string) {
 	serviceInstanceName := fc.Args()[2]
 
 	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
-	var apps models.V3AppsModel
+	var apps models.V3Apps
 	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 	if len(apps.Apps) == 0 {

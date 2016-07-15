@@ -14,7 +14,7 @@ func Delete(cliConnection plugin.CliConnection, args []string) {
 	fmt.Printf("Deleting app %s...\n", appName)
 
 	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
-	apps := V3AppsModel{}
+	apps := V3Apps{}
 	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 	if len(apps.Apps) == 0 {

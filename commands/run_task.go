@@ -18,7 +18,7 @@ func RunTask(cliConnection plugin.CliConnection, args []string) {
 	fmt.Printf("Running task %s on app %s...\n", taskName, appName)
 
 	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
-	apps := models.V3AppsModel{}
+	apps := models.V3Apps{}
 	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
 
 	if len(apps.Apps) == 0 {
@@ -39,7 +39,7 @@ func RunTask(cliConnection plugin.CliConnection, args []string) {
 		return
 	}
 
-	task := models.V3TaskModel{}
+	task := models.V3Task{}
 	err = json.Unmarshal([]byte(strings.Join(output, "")), &task)
 	util.ExitIfError(err)
 	if task.Guid == "" {

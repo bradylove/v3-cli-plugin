@@ -4,15 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/bradylove/v3-cli-plugin/models"
 	"github.com/bradylove/v3-cli-plugin/util"
-	"github.com/cloudfoundry/cli/cf/appfiles"
-	"github.com/cloudfoundry/gofileutils/fileutils"
 	"github.com/simonleung8/flags"
 )
 
@@ -46,86 +41,37 @@ func Push(conn Connection, args []string) {
 		lifecycle = fmt.Sprintf(`"lifecycle": { "type": "buildpack", "data": { "buildpack": %s } }`, buildpack)
 	}
 
-	//create the app
-	output, err := conn.CliCommandWithoutTerminalOutput("curl", "/v3/apps", "-X", "POST", "-d",
-		fmt.Sprintf(`{"name":"%s", "relationships": { "space": {"guid":"%s"}}, %s}`, fc.Args()[1], mySpace.Guid, lifecycle))
+	app, err := conn.createV3App(fmt.Sprintf(`{"name":"%s", "relationships": { "space": {"guid":"%s"}}, %s}`, fc.Args()[1], mySpace.Guid, lifecycle))
 	util.ExitIfError(err)
-
-	var app models.V3AppModel
-	err = json.Unmarshal([]byte(strings.Join(output, "")), &app)
-	util.ExitIfError(err)
-	if app.Error_Code != "" {
-		util.ExitIfError(errors.New("Error creating v3 app: " + app.Error_Code))
-	}
 
 	// go Logs(cliConnection, args)
 	// time.Sleep(2 * time.Second) // b/c sharing the cliConnection makes things break
 
 	//create package
-	var pack models.V3PackageModel
+	var pack models.V3Package
 	if dockerImage != "" {
-		request := fmt.Sprintf(`{"type": "docker", "data": {"image": %s}}`, dockerImage)
-		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", request)
+		pack, err = conn.createDockerPackage(app, dockerImage)
 		util.ExitIfError(err)
-
-		err = json.Unmarshal([]byte(strings.Join(output, "")), &pack)
-		if err != nil {
-			util.ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
-		}
 	} else {
-		//create the empty package to upload the app bits to
-		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", "{\"type\": \"bits\"}")
+		pack, err = conn.createSourcePackage(app, appDir)
 		util.ExitIfError(err)
-
-		err = json.Unmarshal([]byte(strings.Join(output, "")), &pack)
-		if err != nil {
-			util.ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
-		}
-
-		token, err := conn.AccessToken()
-		util.ExitIfError(err)
-		api, apiErr := conn.ApiEndpoint()
-		util.ExitIfError(apiErr)
-		apiString := fmt.Sprintf("%s", api)
-		if strings.Index(apiString, "s") == 4 {
-			apiString = apiString[:4] + apiString[5:]
-		}
-
-		//gather files
-		zipper := appfiles.ApplicationZipper{}
-		fileutils.TempFile("uploads", func(zipFile *os.File, err error) {
-			zipper.Zip(appDir, zipFile)
-			_, upload := exec.Command("curl", fmt.Sprintf("%s/v3/packages/%s/upload", apiString, pack.Guid), "-F", fmt.Sprintf("bits=@%s", zipFile.Name()), "-H", fmt.Sprintf("Authorization: %s", token)).Output()
-			util.ExitIfError(upload)
-		})
-
-		//waiting for cc to pour bits into blobstore
-		util.Poll(conn, fmt.Sprintf("/v3/packages/%s", pack.Guid), "READY", 1*time.Minute, "Package failed to upload")
 	}
 
-	output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/packages/%s/droplets", pack.Guid), "-X", "POST", "-d", "{}")
+	droplet, err := conn.waitForDroplet(pack)
 	util.ExitIfError(err)
 
-	var droplet models.V3DropletModel
-	err = json.Unmarshal([]byte(strings.Join(output, "")), &droplet)
-	if err != nil {
-		util.ExitIfError(errors.New("error marshaling the v3 droplet: " + err.Error()))
-	}
-	//wait for the droplet to be ready
-	util.Poll(conn, fmt.Sprintf("/v3/droplets/%s", droplet.Guid), "STAGED", 1*time.Minute, "Droplet failed to stage")
-
 	//assign droplet to the app
-	output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/droplets/current", app.Guid), "-X", "PUT", "-d", fmt.Sprintf("{\"droplet_guid\":\"%s\"}", droplet.Guid))
+	output, err := conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/droplets/current", app.Guid), "-X", "PUT", "-d", fmt.Sprintf("{\"droplet_guid\":\"%s\"}", droplet.Guid))
 	util.ExitIfError(err)
 
 	//pick the first available shared domain, get the guid
 	space, _ := conn.GetCurrentSpace()
 	nextUrl := "/v2/shared_domains"
-	var allDomains models.DomainsModel
+	var allDomains models.Domains
 	for nextUrl != "" {
 		output, err = conn.CliCommandWithoutTerminalOutput("curl", nextUrl)
 		util.ExitIfError(err)
-		var tmp models.DomainsModel
+		var tmp models.Domains
 		err = json.Unmarshal([]byte(strings.Join(output, "")), &tmp)
 		util.ExitIfError(err)
 		allDomains.Resources = append(allDomains.Resources, tmp.Resources...)
@@ -146,7 +92,7 @@ func Push(conn Connection, args []string) {
 		err = json.Unmarshal([]byte(strings.Join(output, "")), &routes)
 		routeGuid = routes.Routes[0].Metadata.Guid
 	} else {
-		var route models.RouteModel
+		var route models.Route
 		err = json.Unmarshal([]byte(strings.Join(output, "")), &route)
 		if err != nil {
 			util.ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
@@ -155,7 +101,7 @@ func Push(conn Connection, args []string) {
 	}
 
 	util.ExitIfError(err)
-	var route models.RouteModel
+	var route models.Route
 
 	err = json.Unmarshal([]byte(strings.Join(output, "")), &route)
 	if err != nil {
