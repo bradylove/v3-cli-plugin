@@ -30,7 +30,7 @@ func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string)
 
 	switch args[0] {
 	case commandPush:
-		commands.Push(cliConnection, args)
+		commands.Push(conn, args)
 	case commandApps:
 		if len(args) != 1 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])

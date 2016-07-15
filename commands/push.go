@@ -9,15 +9,14 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/bradylove/v3-cli-plugin/models"
-	. "github.com/bradylove/v3-cli-plugin/util"
+	"github.com/bradylove/v3-cli-plugin/models"
+	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/cf/appfiles"
-	"github.com/cloudfoundry/cli/plugin"
 	"github.com/cloudfoundry/gofileutils/fileutils"
 	"github.com/simonleung8/flags"
 )
 
-func Push(cliConnection plugin.CliConnection, args []string) {
+func Push(conn Connection, args []string) {
 	appDir := "."
 	buildpack := "null"
 	dockerImage := ""
@@ -37,9 +36,10 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 		dockerImage = fmt.Sprintf(`"%s"`, fc.String("di"))
 	}
 
-	mySpace, _ := cliConnection.GetCurrentSpace()
+	mySpace, err := conn.GetCurrentSpace()
+	util.ExitIfError(err)
 
-	lifecycle := ""
+	var lifecycle string
 	if dockerImage != "" {
 		lifecycle = `"lifecycle": { "type": "docker", "data": {} }`
 	} else {
@@ -47,44 +47,45 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 	}
 
 	//create the app
-	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/v3/apps", "-X", "POST", "-d",
+	output, err := conn.CliCommandWithoutTerminalOutput("curl", "/v3/apps", "-X", "POST", "-d",
 		fmt.Sprintf(`{"name":"%s", "relationships": { "space": {"guid":"%s"}}, %s}`, fc.Args()[1], mySpace.Guid, lifecycle))
-	ExitIfError(err)
-	app := V3AppModel{}
+	util.ExitIfError(err)
+
+	var app models.V3AppModel
 	err = json.Unmarshal([]byte(output[0]), &app)
-	ExitIfError(err)
+	util.ExitIfError(err)
 	if app.Error_Code != "" {
-		ExitIfError(errors.New("Error creating v3 app: " + app.Error_Code))
+		util.ExitIfError(errors.New("Error creating v3 app: " + app.Error_Code))
 	}
 
 	// go Logs(cliConnection, args)
 	// time.Sleep(2 * time.Second) // b/c sharing the cliConnection makes things break
 
 	//create package
-	pack := V3PackageModel{}
+	var pack models.V3PackageModel
 	if dockerImage != "" {
 		request := fmt.Sprintf(`{"type": "docker", "data": {"image": %s}}`, dockerImage)
-		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", request)
-		ExitIfError(err)
+		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", request)
+		util.ExitIfError(err)
 
 		err = json.Unmarshal([]byte(output[0]), &pack)
 		if err != nil {
-			ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
+			util.ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
 		}
 	} else {
 		//create the empty package to upload the app bits to
-		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", "{\"type\": \"bits\"}")
-		ExitIfError(err)
+		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", "{\"type\": \"bits\"}")
+		util.ExitIfError(err)
 
 		err = json.Unmarshal([]byte(output[0]), &pack)
 		if err != nil {
-			ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
+			util.ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
 		}
 
-		token, err := cliConnection.AccessToken()
-		ExitIfError(err)
-		api, apiErr := cliConnection.ApiEndpoint()
-		ExitIfError(apiErr)
+		token, err := conn.AccessToken()
+		util.ExitIfError(err)
+		api, apiErr := conn.ApiEndpoint()
+		util.ExitIfError(apiErr)
 		apiString := fmt.Sprintf("%s", api)
 		if strings.Index(apiString, "s") == 4 {
 			apiString = apiString[:4] + apiString[5:]
@@ -95,37 +96,38 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 		fileutils.TempFile("uploads", func(zipFile *os.File, err error) {
 			zipper.Zip(appDir, zipFile)
 			_, upload := exec.Command("curl", fmt.Sprintf("%s/v3/packages/%s/upload", apiString, pack.Guid), "-F", fmt.Sprintf("bits=@%s", zipFile.Name()), "-H", fmt.Sprintf("Authorization: %s", token)).Output()
-			ExitIfError(upload)
+			util.ExitIfError(upload)
 		})
 
 		//waiting for cc to pour bits into blobstore
-		Poll(cliConnection, fmt.Sprintf("/v3/packages/%s", pack.Guid), "READY", 1*time.Minute, "Package failed to upload")
+		util.Poll(conn, fmt.Sprintf("/v3/packages/%s", pack.Guid), "READY", 1*time.Minute, "Package failed to upload")
 	}
 
-	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/packages/%s/droplets", pack.Guid), "-X", "POST", "-d", "{}")
-	ExitIfError(err)
-	droplet := V3DropletModel{}
+	output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/packages/%s/droplets", pack.Guid), "-X", "POST", "-d", "{}")
+	util.ExitIfError(err)
+
+	var droplet models.V3DropletModel
 	err = json.Unmarshal([]byte(output[0]), &droplet)
 	if err != nil {
-		ExitIfError(errors.New("error marshaling the v3 droplet: " + err.Error()))
+		util.ExitIfError(errors.New("error marshaling the v3 droplet: " + err.Error()))
 	}
 	//wait for the droplet to be ready
-	Poll(cliConnection, fmt.Sprintf("/v3/droplets/%s", droplet.Guid), "STAGED", 1*time.Minute, "Droplet failed to stage")
+	util.Poll(conn, fmt.Sprintf("/v3/droplets/%s", droplet.Guid), "STAGED", 1*time.Minute, "Droplet failed to stage")
 
 	//assign droplet to the app
-	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/droplets/current", app.Guid), "-X", "PUT", "-d", fmt.Sprintf("{\"droplet_guid\":\"%s\"}", droplet.Guid))
-	ExitIfError(err)
+	output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/droplets/current", app.Guid), "-X", "PUT", "-d", fmt.Sprintf("{\"droplet_guid\":\"%s\"}", droplet.Guid))
+	util.ExitIfError(err)
 
 	//pick the first available shared domain, get the guid
-	space, _ := cliConnection.GetCurrentSpace()
+	space, _ := conn.GetCurrentSpace()
 	nextUrl := "/v2/shared_domains"
-	allDomains := DomainsModel{}
+	var allDomains models.DomainsModel
 	for nextUrl != "" {
-		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", nextUrl)
-		ExitIfError(err)
-		tmp := DomainsModel{}
+		output, err = conn.CliCommandWithoutTerminalOutput("curl", nextUrl)
+		util.ExitIfError(err)
+		var tmp models.DomainsModel
 		err = json.Unmarshal([]byte(output[0]), &tmp)
-		ExitIfError(err)
+		util.ExitIfError(err)
 		allDomains.Resources = append(allDomains.Resources, tmp.Resources...)
 
 		if tmp.NextUrl != "" {
@@ -135,37 +137,38 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 		}
 	}
 	domainGuid := allDomains.Resources[0].Metadata.Guid
-	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", "v2/routes", "-X", "POST", "-d", fmt.Sprintf(`{"host":"%s","domain_guid":"%s","space_guid":"%s"}`, fc.Args()[1], domainGuid, space.Guid))
+	output, err = conn.CliCommandWithoutTerminalOutput("curl", "v2/routes", "-X", "POST", "-d", fmt.Sprintf(`{"host":"%s","domain_guid":"%s","space_guid":"%s"}`, fc.Args()[1], domainGuid, space.Guid))
 
 	var routeGuid string
 	if strings.Contains(output[0], "CF-RouteHostTaken") {
-		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("v2/routes?q=host:%s;domain_guid:%s", fc.Args()[1], domainGuid))
-		routes := RoutesModel{}
+		output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("v2/routes?q=host:%s;domain_guid:%s", fc.Args()[1], domainGuid))
+		var routes models.RoutesModel
 		err = json.Unmarshal([]byte(output[0]), &routes)
 		routeGuid = routes.Routes[0].Metadata.Guid
 	} else {
-		route := RouteModel{}
+		var route models.RouteModel
 		err = json.Unmarshal([]byte(output[0]), &route)
 		if err != nil {
-			ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
+			util.ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
 		}
 		routeGuid = route.Metadata.Guid
 	}
 
-	ExitIfError(err)
-	route := RouteModel{}
+	util.ExitIfError(err)
+	var route models.RouteModel
+
 	err = json.Unmarshal([]byte(output[0]), &route)
 	if err != nil {
-		ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
+		util.ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
 	}
 
 	//map the route to the app
-	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", "/v3/route_mappings", "-X", "POST", "-d", fmt.Sprintf(`{"relationships": { "route": { "guid": "%s" }, "app": { "guid": "%s" } }`, routeGuid, app.Guid))
-	ExitIfError(err)
+	output, err = conn.CliCommandWithoutTerminalOutput("curl", "/v3/route_mappings", "-X", "POST", "-d", fmt.Sprintf(`{"relationships": { "route": { "guid": "%s" }, "app": { "guid": "%s" } }`, routeGuid, app.Guid))
+	util.ExitIfError(err)
 
 	//start the app
-	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/start", app.Guid), "-X", "PUT")
-	ExitIfError(err)
+	output, err = conn.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/start", app.Guid), "-X", "PUT")
+	util.ExitIfError(err)
 
 	fmt.Println("Done pushing! Checkout your processes using 'cf apps'")
 }
