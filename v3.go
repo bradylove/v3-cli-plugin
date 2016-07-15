@@ -7,6 +7,18 @@ import (
 	"github.com/cloudfoundry/cli/plugin"
 )
 
+const (
+	commandPush        = "v3-push"
+	commandApps        = "v3-apps"
+	commandProcesses   = "v3-processes"
+	commandDelete      = "v3-delete"
+	commandLogs        = "v3-logs"
+	commandTasks       = "v3-tasks"
+	commandRunTask     = "v3-run-task"
+	commandCancelTask  = "v3-cancel-task"
+	commandBindService = "v3-bind-service"
+)
+
 type V3Plugin struct {
 }
 
@@ -15,56 +27,58 @@ func main() {
 }
 
 func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string) {
-	if args[0] == "v3-push" {
+	switch args[0] {
+	case commandPush:
 		commands.Push(cliConnection, args)
-	} else if args[0] == "v3-apps" {
-		if len(args) == 1 {
-			commands.Apps(cliConnection, args)
-		} else {
+	case commandApps:
+		if len(args) != 1 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+			return
 		}
-	} else if args[0] == "v3-processes" {
-		if len(args) == 1 {
-			commands.Processes(cliConnection, args)
-		} else {
+		commands.Apps(cliConnection, args)
+	case commandProcesses:
+		if len(args) != 1 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+			return
 		}
-	} else if args[0] == "v3-delete" {
-		if len(args) == 2 {
-			commands.Delete(cliConnection, args)
-		} else {
+		commands.Processes(cliConnection, args)
+	case commandDelete:
+		if len(args) != 2 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+			return
 		}
-	} else if args[0] == "v3-logs" {
+		commands.Delete(cliConnection, args)
+	case commandLogs:
+		fmt.Println(commandLogs, "is temporarily disabled.")
 		// if len(args) == 2 {
 		// 	commands.Logs(cliConnection, args)
 		// } else {
 		// 	fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
 		// }
-	} else if args[0] == "v3-tasks" {
-		if len(args) == 2 {
-			commands.Tasks(cliConnection, args)
-		} else {
+	case commandTasks:
+		if len(args) != 2 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+			return
 		}
-	} else if args[0] == "v3-run-task" {
-		if len(args) == 4 {
-			commands.RunTask(cliConnection, args)
-		} else {
+		commands.Tasks(cliConnection, args)
+	case commandRunTask:
+		if len(args) != 4 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+			return
 		}
-	} else if args[0] == "v3-cancel-task" {
-		if len(args) == 3 {
-			commands.CancelTask(cliConnection, args)
-		} else {
+		commands.RunTask(cliConnection, args)
+	case commandCancelTask:
+		if len(args) != 3 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+			return
 		}
-	} else if args[0] == "v3-bind-service" {
-		if len(args) >= 3 {
-			commands.BindService(cliConnection, args)
-		} else {
+		commands.CancelTask(cliConnection, args)
+	case commandBindService:
+		if len(args) < 3 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+			return
 		}
+		commands.BindService(cliConnection, args)
 	}
 }
 
@@ -78,11 +92,10 @@ func (v3plugin *V3Plugin) GetMetadata() plugin.PluginMetadata {
 		},
 		Commands: []plugin.Command{
 			{
-				Name:     "v3-push",
-				Alias:    "v3-p",
+				Name:     commandPush,
 				HelpText: "pushes current dir as a v3 process",
 				UsageDetails: plugin.Usage{
-					Usage: "v3-push APPNAME",
+					Usage: fmt.Sprintf("%s APPNAME", commandPush),
 					Options: map[string]string{
 						"p":  "path to dir or zip to push",
 						"b":  "custom buildpack by name or Git URL",
@@ -91,79 +104,70 @@ func (v3plugin *V3Plugin) GetMetadata() plugin.PluginMetadata {
 				},
 			},
 			{
-				Name:     "v3-apps",
-				Alias:    "v3-a",
+				Name:     commandApps,
 				HelpText: "displays all v3 apps",
 				UsageDetails: plugin.Usage{
-					Usage:   "v3-apps",
+					Usage:   commandApps,
 					Options: map[string]string{},
 				},
 			},
 			{
-				Name:     "v3-processes",
-				Alias:    "",
+				Name:     commandProcesses,
 				HelpText: "displays all v3 processes",
 				UsageDetails: plugin.Usage{
-					Usage:   "v3-processes",
+					Usage:   fmt.Sprintf("%s ", commandProcesses),
 					Options: map[string]string{},
 				},
 			},
 			{
-				Name:     "v3-delete",
-				Alias:    "v3-d",
+				Name:     commandDelete,
 				HelpText: "delete a v3 app",
 				UsageDetails: plugin.Usage{
-					Usage:   "v3-delete APPNAME",
+					Usage:   fmt.Sprintf("%s APPNAME", commandDelete),
 					Options: map[string]string{},
 				},
 			},
 			{
-				Name:     "v3-logs",
-				Alias:    "",
+				Name:     commandLogs,
 				HelpText: "tail logs for a v3 app",
 				UsageDetails: plugin.Usage{
-					Usage:   "v3-logs APPNAME",
+					Usage:   fmt.Sprintf("%s APPNAME", commandLogs),
 					Options: map[string]string{},
 				},
 			},
 			{
-				Name:     "v3-tasks",
-				Alias:    "v3-t",
-				HelpText: "list tasks for a v3 app",
-				UsageDetails: plugin.Usage{
-					Usage:   "v3-tasks APPNAME",
-					Options: map[string]string{},
-				},
-			},
-			{
-				Name:     "v3-bind-service",
-				Alias:    "v3-bs",
+				Name:     commandBindService,
 				HelpText: "bind a service instance to a v3 app",
 				UsageDetails: plugin.Usage{
-					Usage: "v3-bind-service APPNAME SERVICEINSTANCE",
+					Usage: fmt.Sprintf("%s APPNAME SERVICEINSTANCE", commandBindService),
 					Options: map[string]string{
 						"c": "parameters as json",
 					},
 				},
 			},
 			{
-				Name:     "v3-run-task",
-				Alias:    "v3-rt",
-				HelpText: "run a task on a v3 app",
+				Name:     commandTasks,
+				HelpText: "list tasks for a v3 app",
 				UsageDetails: plugin.Usage{
-					Usage:   "v3-run-task APPNAME TASKNAME COMMAND",
+					Usage:   fmt.Sprintf("%s APPNAME", commandTasks),
 					Options: map[string]string{},
 				},
 			},
 			{
-				Name:     "v3-cancel-task",
-				Alias:    "v3-ct",
+				Name:     commandRunTask,
+				HelpText: "run a task on a v3 app",
+				UsageDetails: plugin.Usage{
+					Usage:   fmt.Sprintf("%s APPNAME TASKNAME COMMAND", commandRunTask),
+					Options: map[string]string{},
+				},
+			},
+			{
+				Name:     commandCancelTask,
 				HelpText: "cancel a task on a v3 app",
 				UsageDetails: plugin.Usage{
-					Usage: "v3-cancel-task APPNAME TASKNAME",
+					Usage: fmt.Sprintf("%s APPNAME TASKNAME", commandCancelTask),
 				},
 			},
 		},
 	}
-
 }
