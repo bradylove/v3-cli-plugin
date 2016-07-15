@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bradylove/v3-cli-plugin/models"
+	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/plugin"
-	"github.com/cloudfoundry/v3-cli-plugin/models"
-	"github.com/cloudfoundry/v3-cli-plugin/util"
 )
 
 type runningTask struct {

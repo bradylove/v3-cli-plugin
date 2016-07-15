@@ -1,0 +1,146 @@
+hash: f41b20be74b46e6c4dfca0d498930011c2da136ecf1649ee50fed083d6bd028e
+updated: 2016-07-14T18:59:58.836209246-06:00
+imports:
+- name: github.com/blang/semver
+  version: 31b736133b98f26d5e078ec9eb591666edfd091f
+  repo: https://github.com/blang/semver
+- name: github.com/bmizerany/pat
+  version: b8a35001b773c267eb260a691f4e5499a3531600
+  repo: https://github.com/bmizerany/pat
+- name: github.com/cloudfoundry/cli
+  version: c129666930c9b64f22843b4f2cbc13bc13f0b969
+  subpackages:
+  - cf/api
+  - cf/appfiles
+  - cf/net
+  - cf/uihelpers
+  - plugin
+  - plugin/models
+  - cf
+  - cf/api/appevents
+  - cf/api/appfiles
+  - cf/api/appinstances
+  - cf/api/applicationbits
+  - cf/api/applications
+  - cf/api/authentication
+  - cf/api/copyapplicationsource
+  - cf/api/environmentvariablegroups
+  - cf/api/featureflags
+  - cf/api/logs
+  - cf/api/organizations
+  - cf/api/password
+  - cf/api/quotas
+  - cf/api/resources
+  - cf/api/securitygroups
+  - cf/api/securitygroups/defaults/running
+  - cf/api/securitygroups/defaults/staging
+  - cf/api/securitygroups/spaces
+  - cf/api/spacequotas
+  - cf/api/spaces
+  - cf/api/stacks
+  - cf/api/strategy
+  - cf/configuration/coreconfig
+  - cf/errors
+  - cf/i18n
+  - cf/models
+  - cf/terminal
+  - cf/trace
+  - cf/v3/repository
+  - glob
+  - cf/formatters
+  - generic
+  - cf/api/securitygroups/defaults
+  - cf/configuration
+  - cf/resources
+  - cf/v3/models
+- name: github.com/cloudfoundry/go-ccapi
+  version: aea9dd6bb3a3b4a7c0d439b17b74ab795ff2946e
+  repo: https://github.com/cloudfoundry/go-ccapi
+  subpackages:
+  - v3/client
+  - v3/routing
+- name: github.com/cloudfoundry/gofileutils
+  version: b9aba8bc5b91f0764131fcac8ea0ff2dd202c8c4
+  subpackages:
+  - fileutils
+- name: github.com/cloudfoundry/loggregator_consumer
+  version: a763160649643d5c2299ead471a9837a17ae4186
+- name: github.com/cloudfoundry/loggregatorlib
+  version: 28ce6c1f1aa0352189bed34cdc9aa4ea8fcb9089
+  subpackages:
+  - logmessage
+  - signature
+- name: github.com/cloudfoundry/noaa
+  version: 75f17396a9775320dabb89682c68255e5d68a9b8
+  repo: https://github.com/cloudfoundry/noaa
+  subpackages:
+  - consumer
+  - errors
+  - consumer/internal
+- name: github.com/cloudfoundry/sonde-go
+  version: ae27095c3a1b9977a0ef1928b0147d5689f2e921
+  repo: https://github.com/cloudfoundry/sonde-go
+  subpackages:
+  - events
+- name: github.com/cloudfoundry/v3-cli-plugin
+  version: a834f7f4629a0bed2a2190f9e9424cd348e25a58
+  subpackages:
+  - models
+  - util
+- name: github.com/fatih/color
+  version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
+  repo: https://github.com/fatih/color
+- name: github.com/gogo/protobuf
+  version: 82d16f734d6d871204a3feb1a73cb220cc92574c
+  repo: https://github.com/gogo/protobuf
+  subpackages:
+  - gogoproto
+  - proto
+  - protoc-gen-gogo/descriptor
+- name: github.com/google/go-querystring
+  version: 6bb77fe6f42b85397288d4f6f67ac72f8f400ee7
+  repo: https://github.com/google/go-querystring
+  subpackages:
+  - query
+- name: github.com/gorilla/websocket
+  version: e2e3d8414d0fbae04004f151979f4e27c6747fe7
+  repo: https://github.com/gorilla/websocket
+- name: github.com/mattn/go-colorable
+  version: bc69d6cebca8dd5675346a34a1c545b67dc74d5e
+  repo: https://github.com/mattn/go-colorable
+- name: github.com/mattn/go-isatty
+  version: 56b76bdf51f7708750eac80fa38b952bb9f32639
+  repo: https://github.com/mattn/go-isatty
+- name: github.com/nicksnyder/go-i18n
+  version: 37e5c2de3e03e4b82693e3fcb4a6aa2cc4eb07e3
+  repo: https://github.com/nicksnyder/go-i18n
+  subpackages:
+  - i18n
+  - i18n/language
+  - i18n/bundle
+  - i18n/translation
+- name: github.com/simonleung8/flags
+  version: ae5fa132d3df01cc63a083ac097f0688a43030b7
+  subpackages:
+  - flag
+- name: github.com/tedsuo/rata
+  version: b15ebd8bd97ae9202eb00c076d59b2f2824bce37
+  repo: https://github.com/tedsuo/rata
+- name: golang.org/x/crypto
+  version: c10c31b5e94b6f7a0283272dc2bb27163dcea24b
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/net
+  version: db8e4de5b2d6653f66aea53094624468caad15d2
+  repo: https://go.googlesource.com/net
+  subpackages:
+  - websocket
+- name: golang.org/x/sys
+  version: 833a04a10549a95dc34458c195cbad61bbb6cb4d
+  repo: https://go.googlesource.com/sys
+  subpackages:
+  - unix
+- name: gopkg.in/yaml.v2
+  version: 49c95bdc21843256fb6c4e0d370a05f24a0bf213
+  repo: https://gopkg.in/yaml.v2
+testImports: []

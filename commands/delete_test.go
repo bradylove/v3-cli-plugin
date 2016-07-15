@@ -7,9 +7,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	. "github.com/bradylove/v3-cli-plugin/commands"
 	fakes "github.com/cloudfoundry/cli/plugin/fakes"
 	io_helpers "github.com/cloudfoundry/cli/testhelpers/io"
-	. "github.com/cloudfoundry/v3-cli-plugin/commands"
 )
 
 var _ = Describe("Delete", func() {

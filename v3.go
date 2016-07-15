@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/bradylove/v3-cli-plugin/commands"
 	"github.com/cloudfoundry/cli/plugin"
-	"github.com/cloudfoundry/v3-cli-plugin/commands"
 )
 
 type V3Plugin struct {

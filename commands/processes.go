@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	. "github.com/bradylove/v3-cli-plugin/models"
+	. "github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/plugin"
-	. "github.com/cloudfoundry/v3-cli-plugin/models"
-	. "github.com/cloudfoundry/v3-cli-plugin/util"
 )
 
 func Processes(cliConnection plugin.CliConnection, args []string) {

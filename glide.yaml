@@ -1,0 +1,20 @@
+package: github.com/bradylove/v3-cli-plugin
+import:
+- package: github.com/cloudfoundry/cli
+  subpackages:
+  - cf/api
+  - cf/appfiles
+  - cf/net
+  - cf/uihelpers
+  - plugin
+- package: github.com/cloudfoundry/gofileutils
+  subpackages:
+  - fileutils
+- package: github.com/cloudfoundry/loggregator_consumer
+- package: github.com/cloudfoundry/loggregatorlib
+  subpackages:
+  - logmessage
+- package: github.com/simonleung8/flags
+- package: golang.org/x/crypto
+  subpackages:
+  - ssh/terminal
