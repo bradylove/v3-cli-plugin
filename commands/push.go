@@ -57,8 +57,8 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 		FreakOut(errors.New("Error creating v3 app: " + app.Error_Code))
 	}
 
-	go Logs(cliConnection, args)
-	time.Sleep(2 * time.Second) // b/c sharing the cliConnection makes things break
+	// go Logs(cliConnection, args)
+	// time.Sleep(2 * time.Second) // b/c sharing the cliConnection makes things break
 
 	//create package
 	pack := V3PackageModel{}
