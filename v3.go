@@ -61,7 +61,7 @@ func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string)
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
 			return
 		}
-		commands.Tasks(commands.Connection{cliConnection}, args)
+		commands.Tasks(conn, args)
 	case commandRunTask:
 		if len(args) != 4 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
