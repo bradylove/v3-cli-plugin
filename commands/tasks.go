@@ -25,10 +25,10 @@ func Tasks(cliConnection plugin.CliConnection, args []string) {
 	appGuid := apps.Apps[0].Guid
 
 	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/tasks", appGuid), "-X", "GET")
-	FreakOut(err)
+	ExitIfError(err)
 	tasks := V3TasksModel{}
 	err = json.Unmarshal([]byte(output[0]), &tasks)
-	FreakOut(err)
+	ExitIfError(err)
 
 	if len(tasks.Tasks) > 0 {
 		tasksTable := NewTable([]string{("name"), ("command"), ("state")})

@@ -23,7 +23,7 @@ func CancelTask(cliConnection plugin.CliConnection, args []string) {
 	taskName := args[2]
 
 	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
-	util.FreakOut(err)
+	util.ExitIfError(err)
 
 	apps := models.V3AppsModel{}
 	json.Unmarshal([]byte(output[0]), &apps)
@@ -36,11 +36,11 @@ func CancelTask(cliConnection plugin.CliConnection, args []string) {
 	appGuid := apps.Apps[0].Guid
 
 	tasksJson, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/tasks", appGuid))
-	util.FreakOut(err)
+	util.ExitIfError(err)
 
 	tasks := models.V3TasksModel{}
 	err = json.Unmarshal([]byte(tasksJson[0]), &tasks)
-	util.FreakOut(err)
+	util.ExitIfError(err)
 
 	var runningTasks []runningTask
 	for _, task := range tasks.Tasks {
@@ -54,7 +54,7 @@ func CancelTask(cliConnection plugin.CliConnection, args []string) {
 		return
 	} else if len(runningTasks) == 1 {
 		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/tasks/%s/cancel", runningTasks[0].guid), "-X", "PUT", "-d", "{}")
-		util.FreakOut(err)
+		util.ExitIfError(err)
 		fmt.Println(output)
 		return
 	} else {
@@ -81,7 +81,7 @@ func CancelTask(cliConnection plugin.CliConnection, args []string) {
 		}
 
 		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/tasks/%s/cancel", runningTasks[i-1].guid), "-X", "PUT", "-d", "{}")
-		util.FreakOut(err)
+		util.ExitIfError(err)
 		fmt.Println(output)
 	}
 }

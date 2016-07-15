@@ -34,7 +34,7 @@ func BindService(cliConnection plugin.CliConnection, args []string) {
 	appGuid := apps.Apps[0].Guid
 
 	serviceInstance, err := cliConnection.GetService(serviceInstanceName)
-	FreakOut(err)
+	ExitIfError(err)
 	serviceInstanceGuid := serviceInstance.Guid
 
 	body := fmt.Sprintf(`{

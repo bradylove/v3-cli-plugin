@@ -49,12 +49,12 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 	//create the app
 	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/v3/apps", "-X", "POST", "-d",
 		fmt.Sprintf(`{"name":"%s", "relationships": { "space": {"guid":"%s"}}, %s}`, fc.Args()[1], mySpace.Guid, lifecycle))
-	FreakOut(err)
+	ExitIfError(err)
 	app := V3AppModel{}
 	err = json.Unmarshal([]byte(output[0]), &app)
-	FreakOut(err)
+	ExitIfError(err)
 	if app.Error_Code != "" {
-		FreakOut(errors.New("Error creating v3 app: " + app.Error_Code))
+		ExitIfError(errors.New("Error creating v3 app: " + app.Error_Code))
 	}
 
 	// go Logs(cliConnection, args)
@@ -65,26 +65,26 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 	if dockerImage != "" {
 		request := fmt.Sprintf(`{"type": "docker", "data": {"image": %s}}`, dockerImage)
 		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", request)
-		FreakOut(err)
+		ExitIfError(err)
 
 		err = json.Unmarshal([]byte(output[0]), &pack)
 		if err != nil {
-			FreakOut(errors.New("Error creating v3 app package: " + app.Error_Code))
+			ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
 		}
 	} else {
 		//create the empty package to upload the app bits to
 		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "-X", "POST", "-d", "{\"type\": \"bits\"}")
-		FreakOut(err)
+		ExitIfError(err)
 
 		err = json.Unmarshal([]byte(output[0]), &pack)
 		if err != nil {
-			FreakOut(errors.New("Error creating v3 app package: " + app.Error_Code))
+			ExitIfError(errors.New("Error creating v3 app package: " + app.Error_Code))
 		}
 
 		token, err := cliConnection.AccessToken()
-		FreakOut(err)
+		ExitIfError(err)
 		api, apiErr := cliConnection.ApiEndpoint()
-		FreakOut(apiErr)
+		ExitIfError(apiErr)
 		apiString := fmt.Sprintf("%s", api)
 		if strings.Index(apiString, "s") == 4 {
 			apiString = apiString[:4] + apiString[5:]
@@ -95,7 +95,7 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 		fileutils.TempFile("uploads", func(zipFile *os.File, err error) {
 			zipper.Zip(appDir, zipFile)
 			_, upload := exec.Command("curl", fmt.Sprintf("%s/v3/packages/%s/upload", apiString, pack.Guid), "-F", fmt.Sprintf("bits=@%s", zipFile.Name()), "-H", fmt.Sprintf("Authorization: %s", token)).Output()
-			FreakOut(upload)
+			ExitIfError(upload)
 		})
 
 		//waiting for cc to pour bits into blobstore
@@ -103,18 +103,18 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 	}
 
 	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/packages/%s/droplets", pack.Guid), "-X", "POST", "-d", "{}")
-	FreakOut(err)
+	ExitIfError(err)
 	droplet := V3DropletModel{}
 	err = json.Unmarshal([]byte(output[0]), &droplet)
 	if err != nil {
-		FreakOut(errors.New("error marshaling the v3 droplet: " + err.Error()))
+		ExitIfError(errors.New("error marshaling the v3 droplet: " + err.Error()))
 	}
 	//wait for the droplet to be ready
 	Poll(cliConnection, fmt.Sprintf("/v3/droplets/%s", droplet.Guid), "STAGED", 1*time.Minute, "Droplet failed to stage")
 
 	//assign droplet to the app
 	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/droplets/current", app.Guid), "-X", "PUT", "-d", fmt.Sprintf("{\"droplet_guid\":\"%s\"}", droplet.Guid))
-	FreakOut(err)
+	ExitIfError(err)
 
 	//pick the first available shared domain, get the guid
 	space, _ := cliConnection.GetCurrentSpace()
@@ -122,10 +122,10 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 	allDomains := DomainsModel{}
 	for nextUrl != "" {
 		output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", nextUrl)
-		FreakOut(err)
+		ExitIfError(err)
 		tmp := DomainsModel{}
 		err = json.Unmarshal([]byte(output[0]), &tmp)
-		FreakOut(err)
+		ExitIfError(err)
 		allDomains.Resources = append(allDomains.Resources, tmp.Resources...)
 
 		if tmp.NextUrl != "" {
@@ -147,25 +147,25 @@ func Push(cliConnection plugin.CliConnection, args []string) {
 		route := RouteModel{}
 		err = json.Unmarshal([]byte(output[0]), &route)
 		if err != nil {
-			FreakOut(errors.New("error unmarshaling the route: " + err.Error()))
+			ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
 		}
 		routeGuid = route.Metadata.Guid
 	}
 
-	FreakOut(err)
+	ExitIfError(err)
 	route := RouteModel{}
 	err = json.Unmarshal([]byte(output[0]), &route)
 	if err != nil {
-		FreakOut(errors.New("error unmarshaling the route: " + err.Error()))
+		ExitIfError(errors.New("error unmarshaling the route: " + err.Error()))
 	}
 
 	//map the route to the app
 	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", "/v3/route_mappings", "-X", "POST", "-d", fmt.Sprintf(`{"relationships": { "route": { "guid": "%s" }, "app": { "guid": "%s" } }`, routeGuid, app.Guid))
-	FreakOut(err)
+	ExitIfError(err)
 
 	//start the app
 	output, err = cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/start", app.Guid), "-X", "PUT")
-	FreakOut(err)
+	ExitIfError(err)
 
 	fmt.Println("Done pushing! Checkout your processes using 'cf apps'")
 }

@@ -13,13 +13,13 @@ import (
 
 func Processes(cliConnection plugin.CliConnection, args []string) {
 	mySpace, err := cliConnection.GetCurrentSpace()
-	FreakOut(err)
+	ExitIfError(err)
 
 	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "v3/processes?per_page=5000", "-X", "GET")
-	FreakOut(err)
+	ExitIfError(err)
 	processes := V3ProcessesModel{}
 	err = json.Unmarshal([]byte(output[0]), &processes)
-	FreakOut(err)
+	ExitIfError(err)
 
 	if len(processes.Processes) > 0 {
 		processesTable := NewTable([]string{("app"), ("type"), ("instances"), ("memory in MB"), ("disk in MB")})

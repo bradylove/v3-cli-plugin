@@ -40,7 +40,7 @@ func RunTask(cliConnection plugin.CliConnection, args []string) {
 
 	task := models.V3TaskModel{}
 	err = json.Unmarshal([]byte(output[0]), &task)
-	util.FreakOut(err)
+	util.ExitIfError(err)
 	if task.Guid == "" {
 		fmt.Printf("Failed to run task %s:\n%s\n", taskName, output[0])
 		return
