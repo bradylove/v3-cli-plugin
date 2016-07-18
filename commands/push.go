@@ -9,6 +9,7 @@ import (
 	"github.com/bradylove/v3-cli-plugin/models"
 	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/simonleung8/flags"
+	"time"
 )
 
 func Push(conn Connection, args []string) {
@@ -44,8 +45,8 @@ func Push(conn Connection, args []string) {
 	app, err := conn.createV3App(fmt.Sprintf(`{"name":"%s", "relationships": { "space": {"guid":"%s"}}, %s}`, fc.Args()[1], mySpace.Guid, lifecycle))
 	util.ExitIfError(err)
 
-	// go Logs(cliConnection, args)
-	// time.Sleep(2 * time.Second) // b/c sharing the cliConnection makes things break
+	 go Logs(conn, args)
+	 time.Sleep(2 * time.Second) // b/c sharing the cliConnection makes things break
 
 	//create package
 	var pack models.V3Package
