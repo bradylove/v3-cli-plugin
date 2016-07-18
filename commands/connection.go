@@ -76,12 +76,12 @@ func (c Connection) createDockerPackage(app models.V3App, dockerImage string) (m
 func (c Connection) createSourcePackage(app models.V3App, appDir string) (models.V3Package, error) {
 	var pack models.V3Package
 
-	output, err := c.httpPost(fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "{\"type\": \"bits\"}")
+	resp, err := c.httpPost(fmt.Sprintf("/v3/apps/%s/packages", app.Guid), "{\"type\": \"bits\"}")
 	if err != nil {
 		return pack, nil
 	}
 
-	err = json.Unmarshal(output, &pack)
+	err = json.Unmarshal(resp, &pack)
 	if err != nil {
 		return pack, nil
 	}
@@ -114,13 +114,14 @@ func (c Connection) createSourcePackage(app models.V3App, appDir string) (models
 			"-H", fmt.Sprintf("Authorization: %s", token)).Output()
 
 		fmt.Printf("%s\n", data)
+		fmt.Println(err)
 
 		util.ExitIfError(err)
+
 	})
 
-
 	//waiting for cc to pour bits into blobstore
-	util.Poll(c, fmt.Sprintf("/v3/packages/%s", pack.Guid), "READY", 1*time.Minute, "Package failed to upload")
+	util.Poll(c, fmt.Sprintf("/v3/packages/%s", pack.Guid), "READY", time.Minute, "Package failed to upload")
 
 	return pack, nil
 }
@@ -137,7 +138,7 @@ func (c Connection) waitForDroplet(pack models.V3Package) (models.V3Droplet, err
 	}
 
 	//wait for the droplet to be ready
-	util.Poll(c, fmt.Sprintf("/v3/droplets/%s", droplet.Guid), "STAGED", 1*time.Minute, "Droplet failed to stage")
+	util.Poll(c, fmt.Sprintf("/v3/droplets/%s", droplet.Guid), "STAGED", time.Minute, "Droplet failed to stage")
 
 	return droplet, nil
 }
