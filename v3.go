@@ -66,7 +66,7 @@ func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string)
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
 			return
 		}
-		commands.RunTask(cliConnection, args)
+		commands.RunTask(conn, args)
 	case commandCancelTask:
 		if len(args) != 3 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])

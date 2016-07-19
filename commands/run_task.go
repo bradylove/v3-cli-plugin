@@ -1,51 +1,23 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 
-	"github.com/bradylove/v3-cli-plugin/models"
 	"github.com/bradylove/v3-cli-plugin/util"
-	"github.com/cloudfoundry/cli/plugin"
-	"strings"
 )
 
-func RunTask(cliConnection plugin.CliConnection, args []string) {
+func RunTask(conn Connection, args []string) {
 	appName := args[1]
 	taskName := args[2]
 	taskCommand := args[3]
 
 	fmt.Printf("Running task %s on app %s...\n", taskName, appName)
 
-	output, _ := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps?names=%s", appName))
-	apps := models.V3Apps{}
-	json.Unmarshal([]byte(strings.Join(output, "")), &apps)
-
-	if len(apps.Apps) == 0 {
-		fmt.Printf("App %s not found\n", appName)
-		return
-	}
-
-	appGuid := apps.Apps[0].Guid
-
-	body := fmt.Sprintf(`{
-		"name": "%s", 
-		"command": "%s"
-	}`, taskName, taskCommand)
-
-	output, err := cliConnection.CliCommandWithoutTerminalOutput("curl", fmt.Sprintf("/v3/apps/%s/tasks", appGuid), "-X", "POST", "-d", body)
-	if err != nil {
-		fmt.Printf("Failed to run task %s\n", taskName)
-		return
-	}
-
-	task := models.V3Task{}
-	err = json.Unmarshal([]byte(strings.Join(output, "")), &task)
+	app, err := conn.findAppByName(appName)
 	util.ExitIfError(err)
-	if task.Guid == "" {
-		fmt.Printf("Failed to run task %s:\n%s\n", taskName, output[0])
-		return
-	}
+
+	_, err = conn.createTask(app, taskName, taskCommand)
+	util.ExitIfError(err)
 
 	fmt.Println("OK")
 }

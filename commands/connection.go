@@ -3,17 +3,18 @@ package commands
 import (
 	"strings"
 
-	"github.com/cloudfoundry/cli/plugin"
-	"github.com/bradylove/v3-cli-plugin/models"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cloudfoundry/gofileutils/fileutils"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/bradylove/v3-cli-plugin/models"
 	"github.com/bradylove/v3-cli-plugin/util"
 	"github.com/cloudfoundry/cli/cf/appfiles"
+	"github.com/cloudfoundry/cli/plugin"
+	"github.com/cloudfoundry/gofileutils/fileutils"
 )
 
 type Connection struct {
@@ -30,6 +31,25 @@ func (c Connection) httpPost(url, body string) ([]byte, error) {
 	output, err := c.CliCommandWithoutTerminalOutput("curl", url, "-X", "POST", "-d", body)
 
 	return []byte(strings.Join(output, "")), err
+}
+
+func (c Connection) findAppByName(name string) (models.V3App, error) {
+	resp, err := c.httpGet(fmt.Sprintf("/v3/apps?names=%s", name))
+	if err != nil {
+		return models.V3App{}, err
+	}
+
+	apps := models.V3Apps{}
+	err = json.Unmarshal(resp, &apps)
+	if err != nil {
+		return models.V3App{}, err
+	}
+
+	if len(apps.Apps) == 0 {
+		return models.V3App{}, fmt.Errorf("App %s not found\n", name)
+	}
+
+	return apps.Apps[0], nil
 }
 
 func (c Connection) createV3App(body string) (models.V3App, error) {
@@ -124,6 +144,36 @@ func (c Connection) createSourcePackage(app models.V3App, appDir string) (models
 	util.Poll(c, fmt.Sprintf("/v3/packages/%s", pack.Guid), "READY", time.Minute, "Package failed to upload")
 
 	return pack, nil
+}
+
+func (c Connection) createTask(app models.V3App, name, command string) (models.V3Task, error) {
+	var task models.V3Task
+
+	body := map[string]string{
+		"name":    name,
+		"command": command,
+	}
+
+	data, err := json.Marshal(&body)
+	if err != nil {
+		return task, err
+	}
+
+	resp, err := c.httpPost(fmt.Sprintf("/v3/apps/%s/tasks", app.Guid), string(data))
+	if err != nil {
+		return task, err
+	}
+
+	err = json.Unmarshal(resp, &task)
+	if err != nil {
+		return task, err
+	}
+
+	if task.Guid == "" {
+		return task, fmt.Errorf("Failed to run task %s:\n%s\n", name, resp)
+	}
+
+	return task, nil
 }
 
 func (c Connection) waitForDroplet(pack models.V3Package) (models.V3Droplet, error) {
