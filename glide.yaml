@@ -11,10 +11,8 @@ import:
   subpackages:
   - fileutils
 - package: github.com/cloudfoundry/loggregator_consumer
-- package: github.com/cloudfoundry/loggregatorlib
-  subpackages:
-  - logmessage
 - package: github.com/simonleung8/flags
 - package: golang.org/x/crypto
   subpackages:
   - ssh/terminal
+- package: github.com/cloudfoundry/loggregatorlib

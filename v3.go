@@ -50,12 +50,11 @@ func (v3plugin *V3Plugin) Run(cliConnection plugin.CliConnection, args []string)
 		}
 		commands.Delete(cliConnection, args)
 	case commandLogs:
-		fmt.Println(commandLogs, "is temporarily disabled.")
-		// if len(args) == 2 {
-		// 	commands.Logs(cliConnection, args)
-		// } else {
-		// 	fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
-		// }
+		if len(args) == 2 {
+			commands.Logs(cliConnection, args)
+		} else {
+			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])
+		}
 	case commandTasks:
 		if len(args) != 2 {
 			fmt.Printf("Wrong number of argument, type `cf %s -h` for help\n", args[0])

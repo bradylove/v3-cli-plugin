@@ -1,12 +1,9 @@
-hash: f41b20be74b46e6c4dfca0d498930011c2da136ecf1649ee50fed083d6bd028e
-updated: 2016-07-14T18:59:58.836209246-06:00
+hash: e7581b01ce2f88e97ae01f7626c60ca5cc1618470a89c48e633c4850b83addaf
+updated: 2016-07-19T08:08:18.750345349-06:00
 imports:
 - name: github.com/blang/semver
   version: 31b736133b98f26d5e078ec9eb591666edfd091f
   repo: https://github.com/blang/semver
-- name: github.com/bmizerany/pat
-  version: b8a35001b773c267eb260a691f4e5499a3531600
-  repo: https://github.com/bmizerany/pat
 - name: github.com/cloudfoundry/cli
   version: c129666930c9b64f22843b4f2cbc13bc13f0b969
   subpackages:
@@ -15,50 +12,20 @@ imports:
   - cf/net
   - cf/uihelpers
   - plugin
-  - plugin/models
-  - cf
-  - cf/api/appevents
-  - cf/api/appfiles
-  - cf/api/appinstances
-  - cf/api/applicationbits
-  - cf/api/applications
-  - cf/api/authentication
-  - cf/api/copyapplicationsource
-  - cf/api/environmentvariablegroups
-  - cf/api/featureflags
   - cf/api/logs
-  - cf/api/organizations
-  - cf/api/password
-  - cf/api/quotas
-  - cf/api/resources
-  - cf/api/securitygroups
-  - cf/api/securitygroups/defaults/running
-  - cf/api/securitygroups/defaults/staging
-  - cf/api/securitygroups/spaces
-  - cf/api/spacequotas
-  - cf/api/spaces
-  - cf/api/stacks
-  - cf/api/strategy
+  - plugin/models
+  - cf/api/authentication
   - cf/configuration/coreconfig
-  - cf/errors
   - cf/i18n
-  - cf/models
   - cf/terminal
-  - cf/trace
-  - cf/v3/repository
+  - cf/errors
+  - cf/models
   - glob
+  - cf
   - cf/formatters
-  - generic
-  - cf/api/securitygroups/defaults
+  - cf/trace
   - cf/configuration
   - cf/resources
-  - cf/v3/models
-- name: github.com/cloudfoundry/go-ccapi
-  version: aea9dd6bb3a3b4a7c0d439b17b74ab795ff2946e
-  repo: https://github.com/cloudfoundry/go-ccapi
-  subpackages:
-  - v3/client
-  - v3/routing
 - name: github.com/cloudfoundry/gofileutils
   version: b9aba8bc5b91f0764131fcac8ea0ff2dd202c8c4
   subpackages:
@@ -74,19 +41,12 @@ imports:
   version: 75f17396a9775320dabb89682c68255e5d68a9b8
   repo: https://github.com/cloudfoundry/noaa
   subpackages:
-  - consumer
   - errors
-  - consumer/internal
 - name: github.com/cloudfoundry/sonde-go
   version: ae27095c3a1b9977a0ef1928b0147d5689f2e921
   repo: https://github.com/cloudfoundry/sonde-go
   subpackages:
   - events
-- name: github.com/cloudfoundry/v3-cli-plugin
-  version: a834f7f4629a0bed2a2190f9e9424cd348e25a58
-  subpackages:
-  - models
-  - util
 - name: github.com/fatih/color
   version: 533cd7fd8a85905f67a1753afb4deddc85ea174f
   repo: https://github.com/fatih/color
@@ -97,11 +57,6 @@ imports:
   - gogoproto
   - proto
   - protoc-gen-gogo/descriptor
-- name: github.com/google/go-querystring
-  version: 6bb77fe6f42b85397288d4f6f67ac72f8f400ee7
-  repo: https://github.com/google/go-querystring
-  subpackages:
-  - query
 - name: github.com/gorilla/websocket
   version: e2e3d8414d0fbae04004f151979f4e27c6747fe7
   repo: https://github.com/gorilla/websocket
@@ -123,9 +78,6 @@ imports:
   version: ae5fa132d3df01cc63a083ac097f0688a43030b7
   subpackages:
   - flag
-- name: github.com/tedsuo/rata
-  version: b15ebd8bd97ae9202eb00c076d59b2f2824bce37
-  repo: https://github.com/tedsuo/rata
 - name: golang.org/x/crypto
   version: c10c31b5e94b6f7a0283272dc2bb27163dcea24b
   subpackages:
